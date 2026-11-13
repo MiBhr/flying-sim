@@ -57,8 +57,7 @@ def _gauge(name, cx, cz, r, uv_rect, scale, quantity, unit):
 
 
 def _board_top(x):
-    hw = G.fus_hw(-2.03)
-    return G.fus_zt(-2.03) + (0.12 - 0.014) * math.sqrt(max(1 - (x / hw) ** 2, 0.0))
+    return G.deck_z(x, -2.03) - 0.014
 
 
 def build_cockpit():

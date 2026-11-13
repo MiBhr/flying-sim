@@ -54,7 +54,11 @@ HINGE_GAP = 0.008
 Y_FIREWALL = -0.63
 Y_STERN = -5.316
 COWL_R = 0.50
-COCKPIT_Y0, COCKPIT_Y1 = -2.02, -2.58
+# cockpit opening: an oval cut in the decking, edged with a padded leather roll
+# [plan top view: oval 0.63 m wide, 1.94 .. 2.60 m aft of the datum incl. the padding]
+COCKPIT_YC = -2.30
+COCKPIT_A, COCKPIT_B = 0.335, 0.31  # semi-axes across / along the fuselage
+COCKPIT_Y0, COCKPIT_Y1 = COCKPIT_YC + COCKPIT_B, COCKPIT_YC - COCKPIT_B
 FUS_HW = [(-0.63, 0.395), (-2.30, 0.385), (-4.18, 0.245), (Y_STERN, 0.030)]
 FUS_ZB = [
     (Y_STERN, -0.049), (-5.16, -0.101), (-4.84, -0.164), (-4.14, -0.240), (-3.44, -0.292),
@@ -80,7 +84,7 @@ AXLE_Y, AXLE_Z = -0.944, -1.270
 WHEEL_R = 0.365
 TYRE_R = 0.050
 AXLE_TRAVEL = 0.07
-SKID_PIVOT = (0.0, -5.02, -0.13)
+SKID_PIVOT = (0.0, -5.20, -0.10)
 SKID_TIP = (0.0, -5.37, -0.31)
 
 # powerplant
@@ -381,13 +385,19 @@ def fus_zt(y):
 
 
 def deck_h(y):
-    if y > COCKPIT_Y0:
-        return interp(y, [(COCKPIT_Y0, 0.12), (-1.30, 0.13), (Y_FIREWALL, 0.11)])
-    if y >= COCKPIT_Y1:
-        return 0.0
+    """Height of the curved decking above the upper longerons (continuous past the cockpit)."""
+    if y > -2.02:
+        return interp(y, [(-2.02, 0.12), (-1.30, 0.13), (Y_FIREWALL, 0.11)])
+    if y >= -2.58:
+        return 0.12
     if y <= DECK_END_Y:
         return 0.0
-    return 0.12 * ((y - DECK_END_Y) / (COCKPIT_Y1 - DECK_END_Y)) ** 0.8
+    return 0.12 * ((y - DECK_END_Y) / (-2.58 - DECK_END_Y)) ** 0.8
+
+
+def deck_z(x, y):
+    """Z of the decking surface at the plan position (x, y)."""
+    return fus_zt(y) + deck_h(y) * max(1.0 - (x / fus_hw(y)) ** 2, 0.0)
 
 
 NB, NS, ND = 5, 6, 10
@@ -399,8 +409,9 @@ def _half_outline(y, hd=None):
     hd = deck_h(y) if hd is None else hd
     box = [(hw * k / NB, zb) for k in range(NB)]
     box += [(hw, lerp(zb, zt, k / NS)) for k in range(NS)]
-    box += [(hw * math.cos(math.radians(90 * k / ND)), zt + hd * math.sin(math.radians(90 * k / ND)))
-            for k in range(ND + 1)]
+    # decking: parabolic arch over the longerons (flat shoulders, as in sections B-B / C-C)
+    box += [(hw * math.cos(math.radians(90 * k / ND)),
+             zt + hd * math.sin(math.radians(90 * k / ND)) ** 2) for k in range(ND + 1)]
     t = min(max((Y_FIREWALL - y) / (Y_FIREWALL + 1.30), 0.0), 1.0)
     t = t * t * (3 - 2 * t)
     if t >= 1.0:
@@ -446,9 +457,8 @@ def fus_side_x(y, z):
 
 
 FUS_STATIONS = [
-    Y_FIREWALL, -0.75, -0.90, -1.05, -1.30, -1.60, -1.90, COCKPIT_Y0, (COCKPIT_Y0 - 1e-4, 0.0),
-    -2.20, -2.40, (COCKPIT_Y1, 0.0), COCKPIT_Y1 - 1e-4, -2.80, -3.10, -3.44, -3.80, DECK_END_Y,
-    -4.14, -4.50, -4.84, -5.16, Y_STERN,
+    Y_FIREWALL, -0.75, -0.90, -1.05, -1.30, -1.60, -1.90, -2.02, -2.16, -2.30, -2.44, -2.58,
+    -2.80, -3.10, -3.44, -3.80, DECK_END_Y, -4.14, -4.50, -4.84, -5.16, Y_STERN,
 ]
 
 
@@ -465,31 +475,23 @@ def build_fuselage():
         ymid = (ys[i] + ys[i + 1]) / 2
         if ymid > -1.30:
             return "Mat_Panel_Green"
-        if j in deck_segs and ymid > COCKPIT_Y0:
+        if j in deck_segs and ymid > COCKPIT_YC:
             return "Mat_Panel_Green"
         return "Mat_Lozenge"
 
     m = mk.loft(rings, None, cap_start=True, cap_end=True, ring_mats=mat)
     m.fm[-2] = "Mat_Panel_Green"
     m.fm[-1] = "Mat_Lozenge"
-    # cockpit opening: remove the flat top between the longerons [plan side/top view]
-    keep_f, keep_m, keep_uv = [], [], []
-    for f, fmat, fuv in zip(m.f, m.fm, m.fuv):
-        pts = [m.v[k] for k in f]
-        ymid = sum(p[1] for p in pts) / len(pts)
-        inside = (
-            len(f) == 4
-            and COCKPIT_Y1 < ymid < COCKPIT_Y0 - 1e-4
-            and all(p[2] > fus_zt(p[1]) - 1e-6 for p in pts)
-            and all(abs(p[0]) < fus_hw(p[1]) - 0.035 for p in pts)
-        )
-        if not inside:
-            keep_f.append(f)
-            keep_m.append(fmat)
-            keep_uv.append(fuv)
-    m.f, m.fm, m.fuv = keep_f, keep_m, keep_uv
     m.smooth_angle = 35.0
-    static("Fuselage", "Exterior", m, mods=[("solidify", 0.010, "Mat_Fabric_Inner")])
+    # the skin gets its thickness first, then the oval cockpit opening is cut through the decking
+    hole = []
+    for z in (fus_zt(COCKPIT_YC) - 0.10, fus_zt(COCKPIT_YC) + 0.40):
+        hole.append([(COCKPIT_A * math.cos(2 * math.pi * k / 48),
+                      COCKPIT_YC + COCKPIT_B * math.sin(2 * math.pi * k / 48), z)
+                     for k in range(48)])
+    cutter = mk.loft(hole, None, cap_start=True, cap_end=True)
+    static("Fuselage", "Exterior", m, mods=[("solidify", 0.010, "Mat_Fabric_Inner"),
+                                           ("cut", cutter)])
 
     # markings on both sides [plan side view]: chequerboard, emblem, number
     uv = MUST["uv"]
@@ -526,22 +528,26 @@ def build_fuselage():
         decals.append(side_quad(-1.72, -1.30, -0.14, 0.14, uv["number"], sx))
     static("Fuselage_Markings", "Exterior", merge(decals), keep_normals=True)
 
-    # padded leather coaming around the cockpit opening
-    hw0, hw1 = fus_hw(COCKPIT_Y0) - 0.035, fus_hw(COCKPIT_Y1) - 0.035
-    z = fus_zt(-2.3) + 0.006
-    loop = [(hw0, COCKPIT_Y0, z), (hw1, COCKPIT_Y1, z), (-hw1, COCKPIT_Y1, z), (-hw0, COCKPIT_Y0, z)]
-    path = []
-    for k in range(4):
-        a, b = loop[k], loop[(k + 1) % 4]
-        path += [mk.vlerp(a, b, t) for t in (0.04, 0.3, 0.7, 0.96)]
-    path.append(path[0])
-    path.append(path[1])
-    static("Cockpit_Coaming", "Exterior", mk.polytube(path, 0.022, 8, "Mat_Leather", caps=False))
+    # padded leather roll around the oval opening, lying on the decking and covering the cut edge;
+    # a row of lacing eyelets on its outer side [plan top view, model photos]
+    def rim(k, n, grow=0.0, dz=0.0):
+        t = 2 * math.pi * k / n
+        x = (COCKPIT_A + grow) * math.cos(t)
+        y = COCKPIT_YC + (COCKPIT_B + grow) * math.sin(t)
+        return (x, y, deck_z(x, y) + dz)
+
+    n_rim = 56
+    path = [rim(k, n_rim, 0.004, 0.004) for k in range(n_rim + 2)]
+    coaming = [mk.polytube(path, 0.026, 10, "Mat_Leather", caps=False)]
+    for k in range(28):
+        p = rim(k, 28, 0.032, 0.001)
+        coaming.append(mk.sphere(p, 0.0045, 6, 4, "Mat_Brass", scale=(1.0, 1.0, 0.5)))
+    static("Cockpit_Coaming", "Exterior", merge(coaming))
 
     # small fittings drawn on the plan's side view
     step = merge([
-        mk.polytube([(-0.30, -2.62, fus_zb(-2.62)), (-0.30, -2.62, fus_zb(-2.62) - 0.14),
-                     (-0.30, -2.74, fus_zb(-2.62) - 0.14), (-0.30, -2.74, fus_zb(-2.74))],
+        mk.polytube([(-0.30, -2.52, fus_zb(-2.52)), (-0.30, -2.52, fus_zb(-2.52) - 0.085),
+                     (-0.30, -2.64, fus_zb(-2.52) - 0.085), (-0.30, -2.64, fus_zb(-2.64))],
                     0.008, 6, "Mat_Strut_Green")
     ])
     static("Step_Stirrup", "Exterior", step)
@@ -662,9 +668,10 @@ def build_tail():
     H = RUD_HINGE_Y
     ce_y, ce_z, ra, rb = H - 0.105, 0.60, 0.441, 0.50
     bal_z = FIN_TOP_Z + 0.012
-    rud_outline = [(H - g, -0.049), (H - g, bal_z), (H + 0.30, bal_z)]
-    a0 = math.degrees(math.atan2((bal_z - ce_z) / rb, (H + 0.30 - ce_y) / ra))
-    for k in range(1, 29):
+    # the balance area's lower edge meets the ellipse without a step [plan side view]
+    rud_outline = [(H - g, -0.049), (H - g, bal_z)]
+    a0 = math.degrees(math.asin((bal_z - ce_z) / rb))
+    for k in range(0, 29):
         a = math.radians(lerp(a0, 240.0, k / 28))
         rud_outline.append((ce_y + ra * math.cos(a), ce_z + rb * math.sin(a)))
     rud_outline.append((H - 0.104, 0.003))
@@ -981,7 +988,7 @@ def build_engine():
 # ----------------------------------------------------------------------------------------------
 def build_guns():
     gz, gx = 0.60, 0.19
-    y_rear, y_rec, y_muz = -1.99, -1.66, -0.52
+    y_rear, y_rec, y_muz = -1.88, -1.45, -0.75  # [plan side view, overlay check]
 
     def gun(sx):
         x = sx * gx
@@ -1035,14 +1042,18 @@ def build_guns():
     ])
     static("Gun_Sight", "Exterior", sight)
 
-    # windscreen: small flat pane in a steel frame, raked back
-    y0, z0 = -1.995, fus_top_z(-1.99) - 0.005
-    p = [(-0.13, y0, z0), (0.13, y0, z0), (0.10, y0 - 0.075, z0 + 0.19),
-         (-0.10, y0 - 0.075, z0 + 0.19)]
-    glass = mk.quad(*p, mat="Mat_Glass")
+    # windscreen [plan side view; profile of no. 002]: a small arched pane, 0.16 m high, standing at
+    # the front of the cockpit opening and leaning aft
+    y0, hw_ws, h_ws, lean = -1.955, 0.10, 0.16, 0.045
+    z0 = deck_z(hw_ws, y0) - 0.004
+    arc = [(hw_ws * math.cos(math.radians(a)), y0 - lean * math.sin(math.radians(a)),
+            z0 + h_ws * math.sin(math.radians(a))) for a in range(0, 181, 12)]
+    glass = Mesh("Mat_Glass")
+    glass.v = arc
+    glass.face(tuple(range(len(arc))))
     static("Windscreen_Glass", "Exterior", glass, mods=[("solidify", 0.004, None)],
            keep_normals=True, lod=False)
-    frame = mk.polytube(p + [p[0], p[1]], 0.006, 6, "Mat_Steel_Dark", caps=False)
+    frame = mk.polytube(arc + [arc[0], arc[1]], 0.005, 6, "Mat_Steel_Dark", caps=False)
     static("Windscreen_Frame", "Exterior", frame)
 
 

@@ -167,7 +167,7 @@ about +-10 mm per pixel. "model" = measured from the generated geometry by `buil
 | ailerons | 2.30 .. 3.91 m from the centreline, chord 0.30 .. 0.22 m, 0.407 m2 each | plan, top view; area from the model |
 | tailplane | root leading edge 4.008 m aft of datum, fixed half-span 1.107 m, tip 1.397 m | plan, top view |
 | elevator | hinge 5.246 m, trailing edge 5.683 m aft of datum, 0.556 m2 per half; V cut-out for the rudder 0.05 m wide at the hinge, 0.22 m at the trailing edge (half-widths) | plan; cut-out from `reference/profile_arma_hobby_4view.webp` (the plan draws it wider: 0.34 m); area from the model |
-| fin / rudder | fin 4.27 .. 5.316 m, top 0.68 m; rudder ellipse 0.88 x 1.00 m, top 1.10 m above thrust line, 0.553 m2 | plan, side view; area from the model |
+| fin / rudder | fin 4.27 .. 5.316 m, top 0.68 m; rudder ellipse 0.88 x 1.00 m, top 1.10 m above thrust line, 0.554 m2 | plan, side view; area from the model |
 | fuselage | firewall 0.63 m, stern post 5.316 m aft of datum (0.06 m wide there); width 0.79 m; depth 0.75 m at the front; lines from 8 stations | plan, side + top view, sections A-A .. D-D |
 | cowling | radius 0.50 m, flat-cut at the fuselage bottom line | plan, side/front view |
 | axle | 0.944 m aft of datum, 1.270 m below the thrust line | plan, side + front view |
@@ -176,9 +176,9 @@ about +-10 mm per pixel. "model" = measured from the generated geometry by `buil
 | static pitch on the ground | 16.5 deg | model; the plan's ground line is at about 17 deg |
 | axle travel | 0.07 m | **assumption** (bungee suspension) |
 | control deflections | ailerons +-20, elevator -25/+20, rudder +-25 deg | **assumption** (not on the plan) |
-| cockpit, pilot eye | opening 2.02 .. 2.58 m aft of datum; eye 2.30 m aft, 0.80 m above the thrust line | plan top/side view; eye = seat pan + 0.78 m (assumption) |
+| cockpit, pilot eye | oval opening in the decking, 0.67 m wide and 0.62 m long, 1.99 .. 2.61 m aft of datum; at its sides the edge dips to the longeron line as on the side view; edged with a padded leather roll (plan: oval 0.63 m wide, 1.94 .. 2.60 m incl. the padding); eye 2.30 m aft, 0.80 m above the thrust line | plan top/side view; eye = seat pan + 0.78 m (assumption) |
 | empty / loaded mass | 405 kg / 605 kg | published (see below), not on the plan |
-| CG | 1.394 m aft of datum, 0.146 m above the thrust line = **44 % MAC** | mass budget (assumed split, see below) |
+| CG | 1.395 m aft of datum, 0.146 m above the thrust line = **44 % MAC** | mass budget (assumed split, see below) |
 | inertia (file axes, kg m2) | Ixx 822 (pitch), Iyy 1083 (yaw), Izz 574 (roll), Iyz 69 | mass budget, boxes + parallel-axis theorem |
 
 ### Mass budget
@@ -202,6 +202,18 @@ item is a solid box of its bounding box at its own centre; the list with positio
 | tailplane + elevators | 9 | | fuel / oil | 55 / 15 |
 | fin + rudder | 4 | | ammunition, equipment | 35 / 10 |
 | undercarriage | 36 | | **loaded** | **605** |
+
+## Side-profile check against the plan
+
+The model's orthographic side silhouette was laid over the plan's side view at the same scale
+(200 px/m). Fuselage top and bottom lines, cowling, wing section and position, cabane struts,
+undercarriage, fin, rudder, tailplane line and tail skid coincide within the line width of the
+drawing (about 15 mm). Corrected after this check: cockpit cut-out now dips to the longeron line
+(parabolic decking, wider oval), guns moved 0.11 .. 0.23 m aft, windscreen made small and arched,
+rudder balance edge without a step, tail skid shortened, step moved. Remaining known difference:
+the lower edge of the rudder balance area is straight (the plan rounds it, up to 40 mm).
+`profile_002_side.webp` and `profile_baczkowski_1985.png` in `reference/` are further side
+profiles used for this comparison (shape of the windscreen and of the cockpit cut-out).
 
 ## Livery decisions
 
@@ -237,7 +249,7 @@ item is a solid box of its bounding box at its own centre; the list with positio
 | item | source | node | status |
 |---|---|---|---|
 | Fuselage shell, sections A-A to D-D, turtledeck, cockpit opening | plan side/top, sections | `Fuselage` | modelled |
-| Padded cockpit coaming | plan top view, photo | `Cockpit_Coaming` | modelled |
+| Oval cockpit opening with padded leather roll and lacing eyelets | plan top view, Arma Hobby 4-view, photo | `Fuselage`, `Cockpit_Coaming` | modelled |
 | Wing planform, taper, rounded tips, centre cut-out, section E-E | plan top/front, E-E | `Wing_L`, `Wing_R` | modelled |
 | Wing ribs inside section E-E | plan E-E | | omitted(internal structure of a plywood-skinned wing, never visible) |
 | Ailerons | plan top view | `Aileron_L`, `Aileron_R` | modelled |
@@ -265,10 +277,10 @@ item is a solid box of its bounding box at its own centre; the list with positio
 | Dark fitting under the rear of the cowling | plan side view | `Cowl_Drain` | modelled |
 | Propeller, two blades, laminated wood, hub plate | plan (propeller drawing), photos | `Prop_1` | modelled |
 | Propeller blur disc | - | `Prop_1_Disc` | modelled |
-| Two machine guns with cooling jackets | plan side/front/top view | `Gun_L`, `Gun_R` | modelled |
+| Two machine guns with cooling jackets (jacket 0.75 .. 1.45 m, receiver to 1.88 m aft of datum) | plan side/front/top view | `Gun_L`, `Gun_R` | modelled |
 | Gun charging handles, feed blocks, ammunition chutes | plan side view (not resolved) | `Gun_L`, `Gun_R` | modelled |
 | Ring-and-bead sight | model photos | `Gun_Sight` | modelled |
-| Windscreen | plan side view | `Windscreen_Glass`, `Windscreen_Frame` | modelled |
+| Windscreen: small arched pane, 0.20 m wide, 0.16 m high, leaning aft at the front of the cockpit opening | plan side view, profile of no. 002 | `Windscreen_Glass`, `Windscreen_Frame` | modelled |
 | Filler cap on the decking | plan top view | `Fuel_Filler_Cap` | modelled |
 | Round ports on the fuselage side | plan side view | `Side_Ports` | modelled |
 | Step under the fuselage | plan side view | `Step_Stirrup` | modelled |
@@ -298,11 +310,11 @@ item is a solid box of its bounding box at its own centre; the list with positio
 
 | | LOD0 | LOD1 | LOD2 | limit |
 |---|---|---|---|---|
-| Exterior triangles | 27 916 | 10 542 | 3 736 | 150 000 |
+| Exterior triangles | 30 619 | 11 428 | 3 952 | 150 000 |
 | Engine bay triangles | 20 968 | 7 352 | 2 116 | 60 000 |
 | Cockpit triangles | 6 250 | 760 (`Cockpit_LOD1`) | - | 60 000 |
 | Textures, decoded with mips | 28.7 MB | | | 128 MB |
-| `fokker_ev_stec.glb` | 4.12 MB | | | 150 MB |
+| `fokker_ev_stec.glb` | 4.22 MB | | | 150 MB |
 
 LOD distances (`extras.fsim.lods`): LOD0 to 40 m, LOD1 to 200 m, LOD2 beyond. LOD1/LOD2 are made
 with Blender's Decimate modifier (35 % and 10 %); parts smaller than 0.25 m are dropped at LOD2.
