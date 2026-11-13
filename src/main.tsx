@@ -10,6 +10,7 @@ import {
   createCameraManager,
   createFollowCamera,
   createFreeCamera,
+  preloadAssets,
   SimulationView,
 } from '@usf/render';
 import { CloudLayer, Fog, Moon, SkyDome, StarField, SunLight } from '@usf/render/sky';
@@ -19,7 +20,8 @@ import { createWorld } from '@usf/world';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { INPUT_MAP } from './input-map.js';
-import { RENDERERS } from './renderers.js';
+import { createPointFollowCamera, type PointFollowCamera } from './point-follow-camera.js';
+import { ASSETS, createRenderers } from './renderers.js';
 import { createCraftControlSystem, createScene, GRAVITY, type Scene } from './scene.js';
 
 const world = createWorld();
@@ -47,11 +49,14 @@ const loop = createSimulationLoop({
 /** Camera input is the frame channel, never `consumeStep` (USF ADR 0007 §3.4). */
 const frameInput = (): InputReader => input.frameReader();
 
-function createCameras(target: Scene): CameraManager {
+function createCameras(target: Scene, follow: PointFollowCamera): CameraManager {
   return createCameraManager({
     input: frameInput,
     next: 'cameraNext',
+    initial: 'follow',
     cameras: [
+      // A few metres behind and above the tail (whole aircraft in view), turning with it.
+      { id: 'follow', camera: follow },
       {
         id: 'chase',
         camera: createFollowCamera({
@@ -82,7 +87,21 @@ function createCameras(target: Scene): CameraManager {
   });
 }
 
-const cameras = createCameras(scene);
+// Offset from the model's `Pt_Cam_Chase`, set by the craft renderer once the model is loaded;
+// until then a world-axis chase view.
+const followCamera = createPointFollowCamera(
+  scene.craft,
+  createFollowCamera({
+    target: scene.craft,
+    offset: { x: 0, y: 3, z: 10 },
+    inheritRotation: false,
+  }),
+);
+const cameras = createCameras(scene, followCamera);
+const renderers = createRenderers({
+  onFollowCameraPoint: (offset) => followCamera.setOffset(offset),
+});
+preloadAssets(ASSETS, Object.keys(ASSETS));
 
 const container = document.getElementById('root');
 if (container === null) {
@@ -91,7 +110,7 @@ if (container === null) {
 createRoot(container).render(
   <StrictMode>
     <UsfProvider loop={loop} world={world}>
-      <SimulationView renderers={RENDERERS} camera={cameras}>
+      <SimulationView renderers={renderers} camera={cameras} assets={ASSETS}>
         <SkyDome />
         <SunLight />
         <Moon />

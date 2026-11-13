@@ -1,11 +1,21 @@
+import type { Vec3 } from '@usf/core';
 import { Collider } from '@usf/physics';
-import { Renderable, type RendererProps, type RendererRegistry } from '@usf/render';
+import {
+  type AssetManifest,
+  Renderable,
+  type RendererProps,
+  type RendererRegistry,
+} from '@usf/render';
 import { useWorld } from '@usf/ui';
 import type { ReactNode } from 'react';
+import {
+  createFokkerRenderer,
+  MODEL_ASSET,
+  MODEL_ASSET_ID,
+} from './aircraft/fokker_ev_stec/renderer.js';
 
 const COLORS: Readonly<Record<string, string>> = {
   ground: '#5f7a4f',
-  craft: '#e8eaed',
 };
 
 /** A box mesh sized from the entity's `Collider` and coloured by its `Renderable.kind`. */
@@ -21,7 +31,18 @@ function BoxRenderer({ entity }: RendererProps): ReactNode {
   );
 }
 
-export const RENDERERS: RendererRegistry = {
-  ground: BoxRenderer,
-  craft: BoxRenderer,
+export const ASSETS: AssetManifest = {
+  [MODEL_ASSET_ID]: MODEL_ASSET,
 };
+
+export interface RendererHooks {
+  /** The craft model's follow camera point (m, model frame), once the model is loaded. */
+  readonly onFollowCameraPoint: (offset: Vec3) => void;
+}
+
+export function createRenderers(hooks: RendererHooks): RendererRegistry {
+  return {
+    ground: BoxRenderer,
+    craft: createFokkerRenderer({ onFollowCameraPoint: hooks.onFollowCameraPoint }),
+  };
+}
