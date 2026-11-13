@@ -14,7 +14,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "check": "tsc --noEmit && biome ci .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "model:check": "node tools/aircraft/fokker_ev_stec/validate.mjs"
   },
   "dependencies": {
     "@usf/astronomy": "0.1.0",

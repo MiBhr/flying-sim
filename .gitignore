@@ -31,3 +31,7 @@ Thumbs.db
 
 # Claude Code: personal settings stay local
 .claude/settings.local.json
+
+# Aircraft model pipelines: build output and Python caches (the shipped .glb live in public/)
+tools/aircraft/*/out/
+__pycache__/
