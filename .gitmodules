@@ -1,0 +1,3 @@
+[submodule "vendor/usf"]
+	path = vendor/usf
+	url = git@github.com:MiBhr/universal-simulation-framework.git

@@ -1,0 +1,14 @@
+Copyright (c) 2026 MiBhr. All rights reserved.
+
+flying-sim is proprietary software. No licence is granted to use, copy, modify, merge, publish,
+distribute, sublicense or sell any part of this repository without the prior written permission
+of the copyright holder.
+
+Exceptions:
+
+- The Universal Simulation Framework in vendor/usf is a separate proprietary work of the same
+  copyright holder, under its own LICENSE.
+- Third-party components keep their own licences (see the licence files of the respective
+  packages in node_modules).
+- Bright-star data derived from the HYG database (via @usf/astronomy/data/bright-stars) is
+  licensed under CC BY-SA 4.0 as stated in that data module's own notice.

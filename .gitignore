@@ -1,0 +1,33 @@
+# Dependencies (npm workspaces; package-lock.json is committed)
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Vite and Vitest
+.vite/
+coverage/
+
+# Environment files and local overrides (never commit secrets)
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Claude Code: personal settings stay local
+.claude/settings.local.json

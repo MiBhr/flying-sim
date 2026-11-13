@@ -1,0 +1,43 @@
+{
+  "name": "flying-sim",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "workspaces": [
+    "vendor/usf/packages/*"
+  ],
+  "engines": {
+    "node": "^24.11.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "check": "tsc --noEmit && biome ci .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@usf/astronomy": "0.1.0",
+    "@usf/core": "0.1.0",
+    "@usf/environment": "0.1.0",
+    "@usf/input": "0.1.0",
+    "@usf/physics": "0.1.0",
+    "@usf/render": "0.1.0",
+    "@usf/runtime": "0.1.0",
+    "@usf/ui": "0.1.0",
+    "@usf/world": "0.1.0",
+    "@react-three/fiber": "9.8.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
