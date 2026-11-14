@@ -13,6 +13,7 @@ import {
   MODEL_ASSET,
   MODEL_ASSET_ID,
 } from './aircraft/fokker_ev_stec/renderer.js';
+import type { CockpitPoints } from './cockpit-camera.js';
 
 const COLORS: Readonly<Record<string, string>> = {
   ground: '#5f7a4f',
@@ -38,11 +39,16 @@ export const ASSETS: AssetManifest = {
 export interface RendererHooks {
   /** The craft model's follow camera point (m, model frame), once the model is loaded. */
   readonly onFollowCameraPoint: (offset: Vec3) => void;
+  /** The craft model's pilot eye and head pivot (m, model frame), once the model is loaded. */
+  readonly onCockpitPoints: (points: CockpitPoints) => void;
 }
 
 export function createRenderers(hooks: RendererHooks): RendererRegistry {
   return {
     ground: BoxRenderer,
-    craft: createFokkerRenderer({ onFollowCameraPoint: hooks.onFollowCameraPoint }),
+    craft: createFokkerRenderer({
+      onFollowCameraPoint: hooks.onFollowCameraPoint,
+      onCockpitPoints: hooks.onCockpitPoints,
+    }),
   };
 }

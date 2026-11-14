@@ -15,6 +15,14 @@ export const THRUST = 20;
 const CRAFT_MASS = 1; // kg
 const CRAFT_SIZE: Vec3 = { x: 2, y: 0.5, z: 3 }; // m
 
+/** Height of the terrain surface (the top of the ground box), m. */
+export const GROUND_LEVEL = 0;
+const GROUND_THICKNESS = 0.2; // m
+/** Side of the square ground, m: its edge lies past the default 50 km visibility, in the fog. */
+const GROUND_SIZE = 100_000;
+/** Where the craft starts: 1000 m above the terrain. */
+export const CRAFT_START: Vec3 = { x: 0, y: GROUND_LEVEL + 1000, z: 0 };
+
 export interface Scene {
   readonly ground: Entity;
   readonly craft: Entity;
@@ -23,13 +31,18 @@ export interface Scene {
 /** Creates the scene; called once before the loop starts (outside a step). */
 export function createScene(world: World): Scene {
   const ground = world.createEntity();
-  world.add(ground, LocalTransform, { position: { x: 0, y: -0.1, z: 0 } });
-  world.add(ground, Collider, { shape: 'box', size: { x: 400, y: 0.2, z: 400 } });
+  world.add(ground, LocalTransform, {
+    position: { x: 0, y: GROUND_LEVEL - GROUND_THICKNESS / 2, z: 0 },
+  });
+  world.add(ground, Collider, {
+    shape: 'box',
+    size: { x: GROUND_SIZE, y: GROUND_THICKNESS, z: GROUND_SIZE },
+  });
   world.add(ground, RigidBody, { type: 'static' });
   world.add(ground, Renderable, { kind: 'ground' });
 
   const craft = world.createEntity();
-  world.add(craft, LocalTransform, { position: { x: 0, y: 2, z: 0 } });
+  world.add(craft, LocalTransform, { position: CRAFT_START });
   world.add(craft, Collider, { shape: 'box', size: CRAFT_SIZE });
   world.add(craft, RigidBody, {
     type: 'dynamic',

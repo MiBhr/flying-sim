@@ -46,8 +46,13 @@ In an existing clone without the submodule: `git submodule update --init`.
 | W / S | north / south |
 | A / D | west / east |
 | R / F | up / down |
-| C | next camera (chase, free) |
-| J L I K, mouse drag | look around (free camera) |
+| C | next camera (follow, cockpit, chase, orbit, free) |
+| [ / ], mouse drag | turn around the aircraft (orbit camera) |
+| ' / \, mouse drag | tilt (orbit camera) |
+| - / =, mouse wheel | zoom out / in (orbit camera) |
+| J L I K, mouse drag | look around (cockpit and free camera) |
+| V | look straight ahead (cockpit camera) |
+| PgUp / PgDn | seat up / down, ±10 cm (cockpit camera) |
 
 ## Licence and distribution
 

@@ -19,10 +19,21 @@ import { UsfProvider } from '@usf/ui';
 import { createWorld } from '@usf/world';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { cameraFloor, keepAboveGround } from './camera-floor.js';
+import { CAMERA_FAR, CAMERA_FOV, CameraLens } from './camera-lens.js';
+import { type CockpitCamera, createCockpitCamera } from './cockpit-camera.js';
 import { INPUT_MAP } from './input-map.js';
+import { createCraftOrbitCamera } from './orbit-camera.js';
 import { createPointFollowCamera, type PointFollowCamera } from './point-follow-camera.js';
 import { ASSETS, createRenderers } from './renderers.js';
-import { createCraftControlSystem, createScene, GRAVITY, type Scene } from './scene.js';
+import {
+  CRAFT_START,
+  createCraftControlSystem,
+  createScene,
+  GRAVITY,
+  GROUND_LEVEL,
+  type Scene,
+} from './scene.js';
 
 const world = createWorld();
 const scene = createScene(world);
@@ -49,7 +60,11 @@ const loop = createSimulationLoop({
 /** Camera input is the frame channel, never `consumeStep` (USF ADR 0007 §3.4). */
 const frameInput = (): InputReader => input.frameReader();
 
-function createCameras(target: Scene, follow: PointFollowCamera): CameraManager {
+function createCameras(
+  target: Scene,
+  follow: PointFollowCamera,
+  cockpit: CockpitCamera,
+): CameraManager {
   return createCameraManager({
     input: frameInput,
     next: 'cameraNext',
@@ -57,6 +72,8 @@ function createCameras(target: Scene, follow: PointFollowCamera): CameraManager 
     cameras: [
       // A few metres behind and above the tail (whole aircraft in view), turning with it.
       { id: 'follow', camera: follow },
+      // The pilot's eye, turning with the aircraft; look around with J L I K or a drag.
+      { id: 'cockpit', camera: cockpit },
       {
         id: 'chase',
         camera: createFollowCamera({
@@ -66,9 +83,14 @@ function createCameras(target: Scene, follow: PointFollowCamera): CameraManager 
         }),
       },
       {
+        id: 'orbit',
+        camera: createCraftOrbitCamera(target.craft, frameInput, cameraFloor(GROUND_LEVEL)),
+      },
+      {
         id: 'free',
         camera: createFreeCamera({
-          position: { x: 0, y: 4, z: 20 },
+          // behind and a little above the craft's start
+          position: { x: CRAFT_START.x, y: CRAFT_START.y + 2, z: CRAFT_START.z + 20 },
           pitch: -0.1,
           input: frameInput,
           controls: {
@@ -97,9 +119,22 @@ const followCamera = createPointFollowCamera(
     inheritRotation: false,
   }),
 );
-const cameras = createCameras(scene, followCamera);
+// Points from the model's `Pt_Eye` / `Pt_Head_Pivot`, set by the craft renderer once the model
+// is loaded; until then the same world-axis chase view.
+const cockpitCamera = createCockpitCamera(
+  scene.craft,
+  frameInput,
+  createFollowCamera({
+    target: scene.craft,
+    offset: { x: 0, y: 3, z: 10 },
+    inheritRotation: false,
+  }),
+);
+// No camera ever goes below the terrain.
+const cameras = keepAboveGround(createCameras(scene, followCamera, cockpitCamera), GROUND_LEVEL);
 const renderers = createRenderers({
   onFollowCameraPoint: (offset) => followCamera.setOffset(offset),
+  onCockpitPoints: (points) => cockpitCamera.setPoints(points),
 });
 preloadAssets(ASSETS, Object.keys(ASSETS));
 
@@ -111,6 +146,7 @@ createRoot(container).render(
   <StrictMode>
     <UsfProvider loop={loop} world={world}>
       <SimulationView renderers={renderers} camera={cameras} assets={ASSETS}>
+        <CameraLens fov={CAMERA_FOV} far={CAMERA_FAR} />
         <SkyDome />
         <SunLight />
         <Moon />

@@ -13,6 +13,8 @@ export const MODEL_ASSET = { url: MODEL_URL, type: 'gltf' } as const;
 export interface FokkerRendererOptions {
   /** Called once the model is loaded, with `Pt_Cam_Chase` in the model frame (m). */
   readonly onFollowCameraPoint?: (offset: Vec3) => void;
+  /** Called once the model is loaded, with `Pt_Eye` and `Pt_Head_Pivot` in the model frame (m). */
+  readonly onCockpitPoints?: (points: { readonly eye: Vec3; readonly headPivot: Vec3 }) => void;
 }
 
 /**
@@ -20,19 +22,24 @@ export interface FokkerRendererOptions {
  * file's contract on load (`parseFsim`, `bindNodes`) and shows exterior LOD0.
  */
 export function createFokkerRenderer(options: FokkerRendererOptions = {}): RendererComponent {
-  const { onFollowCameraPoint } = options;
+  const { onFollowCameraPoint, onCockpitPoints } = options;
   // biome-ignore lint/correctness/noComponentHookFactories: called once at startup to build the renderer registry, never during render, so the component identity is stable.
   return function FokkerRenderer(_props: RendererProps): ReactNode {
     const model = useModel(MODEL_ASSET_ID);
-    const followPoint = useMemo(() => {
+    const points = useMemo(() => {
       parseFsim(model.extras('Aircraft'));
       const nodes = bindNodes(model.node);
       showLod(model.scene, 0);
-      return pointInModel(model.scene, nodes.Pt_Cam_Chase, 'Pt_Cam_Chase');
+      return {
+        chase: pointInModel(model.scene, nodes.Pt_Cam_Chase, 'Pt_Cam_Chase'),
+        eye: pointInModel(model.scene, nodes.Pt_Eye, 'Pt_Eye'),
+        headPivot: pointInModel(model.scene, nodes.Pt_Head_Pivot, 'Pt_Head_Pivot'),
+      };
     }, [model]);
     useLayoutEffect(() => {
-      onFollowCameraPoint?.(followPoint);
-    }, [followPoint]);
+      onFollowCameraPoint?.(points.chase);
+      onCockpitPoints?.({ eye: points.eye, headPivot: points.headPivot });
+    }, [points]);
     return <primitive object={model.scene} />;
   };
 }
