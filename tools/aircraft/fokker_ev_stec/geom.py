@@ -94,7 +94,10 @@ CYL = 9
 
 # cockpit
 SEAT_PAN_Z = 0.02
-EYE = (0.0, -2.30, 0.80)
+# height of the ring-and-bead sight line [model photos]; the pilot aims through it, so the eye
+# lies on it (= seat pan + 0.725 m, a seated eye height of a man of the period)
+SIGHT_Z = 0.745
+EYE = (0.0, -2.30, SIGHT_Z)
 BOARD_Y = -1.985
 
 # instruments: clock angles (degrees clockwise from 12 o'clock, as the pilot sees the dial)
@@ -1030,7 +1033,7 @@ def build_guns():
     point("Pt_Muzzle_L", (-gx, y_muz + 0.07, gz))
 
     # ring-and-bead sight between the guns
-    zs = 0.745
+    zs = SIGHT_Z
     yb, yr = -0.95, -1.74
     sight = merge([
         mk.tube((0, yb, fus_top_z(yb) - 0.01), (0, yb, zs), 0.004, 6, "Mat_Steel_Dark"),

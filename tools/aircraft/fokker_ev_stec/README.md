@@ -176,7 +176,7 @@ about +-10 mm per pixel. "model" = measured from the generated geometry by `buil
 | static pitch on the ground | 16.5 deg | model; the plan's ground line is at about 17 deg |
 | axle travel | 0.07 m | **assumption** (bungee suspension) |
 | control deflections | ailerons +-20, elevator -25/+20, rudder +-25 deg | **assumption** (not on the plan) |
-| cockpit, pilot eye | oval opening in the decking, 0.67 m wide and 0.62 m long, 1.99 .. 2.61 m aft of datum; at its sides the edge dips to the longeron line as on the side view; edged with a padded leather roll (plan: oval 0.63 m wide, 1.94 .. 2.60 m incl. the padding); eye 2.30 m aft, 0.80 m above the thrust line | plan top/side view; eye = seat pan + 0.78 m (assumption) |
+| cockpit, pilot eye | oval opening in the decking, 0.67 m wide and 0.62 m long, 1.99 .. 2.61 m aft of datum; at its sides the edge dips to the longeron line as on the side view; edged with a padded leather roll (plan: oval 0.63 m wide, 1.94 .. 2.60 m incl. the padding); eye 2.30 m aft, 0.745 m above the thrust line, on the line of the ring-and-bead sight | plan top/side view; eye on the sight line = seat pan + 0.725 m (assumption: the pilot aims through the sight) |
 | empty / loaded mass | 405 kg / 605 kg | published (see below), not on the plan |
 | CG | 1.395 m aft of datum, 0.146 m above the thrust line = **44 % MAC** | mass budget (assumed split, see below) |
 | inertia (file axes, kg m2) | Ixx 822 (pitch), Iyy 1083 (yaw), Izz 574 (roll), Iyz 69 | mass budget, boxes + parallel-axis theorem |
